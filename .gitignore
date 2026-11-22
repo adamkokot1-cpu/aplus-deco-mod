@@ -1,0 +1,7 @@
+build/
+build-*/
+.cache/
+*.geode
+.vscode/
+.idea/
+tests/test_core

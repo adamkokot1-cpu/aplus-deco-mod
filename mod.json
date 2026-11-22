@@ -1,0 +1,90 @@
+{
+	"geode": "5.10.0",
+	"gd": {
+		"win": "2.2081",
+		"android": "2.2081",
+		"mac": "2.2081",
+		"ios": "2.2081"
+	},
+	"id": "aplusdev.aplus-deco",
+	"name": "A+ Deco Mod",
+	"version": "v1.0.0",
+	"developer": "APlusDev",
+	"description": "An AI that decorates your levels: type a description, pick an object count, done.",
+	"tags": ["editor", "utility"],
+	"resources": {
+		"sprites": [
+			"resources/*.png"
+		]
+	},
+	"settings": {
+		"default-count": {
+			"type": "int",
+			"name": "Default Object Count",
+			"description": "How many objects the A+ window starts with.",
+			"default": 300,
+			"min": 1,
+			"max": 100000
+		},
+		"max-count": {
+			"type": "int",
+			"name": "Max Object Count",
+			"description": "Safety limit for one generation. Very high numbers can lag the editor.",
+			"default": 5000,
+			"min": 10,
+			"max": 100000
+		},
+		"color-triggers": {
+			"type": "bool",
+			"name": "Theme Colors On By Default",
+			"description": "Add 5 color triggers at the start of the level so the deco gets the theme's colors.",
+			"default": true
+		},
+		"color-channel-start": {
+			"type": "int",
+			"name": "First Color Channel",
+			"description": "A+ uses 5 color channels starting here (default 50 = channels 50 to 54). Change it if your level already uses them.",
+			"default": 50,
+			"min": 1,
+			"max": 995
+		},
+		"deco-group": {
+			"type": "int",
+			"name": "Deco Group ID",
+			"description": "Put every generated object into this group so you can move, hide or toggle all of it at once. 0 = no group.",
+			"default": 0,
+			"min": 0,
+			"max": 9999
+		},
+		"use-extra-objects": {
+			"type": "bool",
+			"name": "Discover Extra Objects",
+			"description": "Also use other decoration objects the mod finds in your game (glows, lights, more clouds...). Turn off for only the built-in set.",
+			"default": true
+		},
+		"keep-open": {
+			"type": "bool",
+			"name": "Keep Window Open",
+			"description": "Keep the A+ window open after generating (otherwise it closes so you can see the result).",
+			"default": false
+		},
+		"use-claude": {
+			"type": "bool",
+			"name": "Use Claude AI By Default",
+			"description": "Start with the 'Claude AI (online)' toggle on. Needs an API key below.",
+			"default": false
+		},
+		"claude-api-key": {
+			"type": "string",
+			"name": "Claude API Key",
+			"description": "Your Anthropic API key (from console.anthropic.com). Only used when the Claude toggle is on. Stored locally in your Geode save folder.",
+			"default": ""
+		},
+		"claude-model": {
+			"type": "string",
+			"name": "Claude Model",
+			"description": "Which Claude model designs the deco plan.",
+			"default": "claude-sonnet-5-5"
+		}
+	}
+}

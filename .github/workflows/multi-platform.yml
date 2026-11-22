@@ -1,0 +1,109 @@
+name: Build Geode Mod
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+    paths-ignore:
+      - 'build-output/**'
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+        - name: Windows
+          os: windows-latest
+
+        - name: macOS
+          os: macos-latest
+
+        - name: iOS
+          os: macos-latest
+          target: iOS
+
+        - name: Android32
+          os: ubuntu-latest
+          target: Android32
+
+        - name: Android64
+          os: ubuntu-latest
+          target: Android64
+
+    name: ${{ matrix.config.name }}
+    runs-on: ${{ matrix.config.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build the mod
+        uses: geode-sdk/build-geode-mod@main
+        with:
+          bindings: geode-sdk/bindings
+          bindings-ref: main
+          combine: true
+          target: ${{ matrix.config.target }}
+
+  package:
+    name: Package builds
+    runs-on: ubuntu-latest
+    needs: ['build']
+    if: always()
+
+    steps:
+      - uses: geode-sdk/build-geode-mod/combine@main
+        id: build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Build Output
+          path: ${{ steps.build.outputs.build-output }}
+
+  # Saves the finished .geode (and the error log, if a platform failed) into
+  # the repo's build-output/ folder, so it can be downloaded without Actions.
+  publish:
+    name: Save .geode to repo
+    runs-on: ubuntu-latest
+    needs: ['build', 'package']
+    if: always()
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: Build Output
+          path: out
+
+      - name: Collect .geode and logs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          RUN: ${{ github.run_id }}
+        run: |
+          mkdir -p build-output
+          rm -f build-output/*
+          find out -name '*.geode' -exec cp {} build-output/ \; 2>/dev/null || true
+          gh api "repos/$REPO/actions/runs/$RUN/jobs" --jq '.jobs[] | "\(.name): \(.conclusion // .status)"' > build-output/status.txt || true
+          for id in $(gh api "repos/$REPO/actions/runs/$RUN/jobs" --jq '.jobs[] | select(.conclusion=="failure") | .id'); do
+            gh api "repos/$REPO/actions/jobs/$id/logs" > "build-output/failed-job-$id.log" 2>&1 || true
+            tail -c 1500000 "build-output/failed-job-$id.log" > tmp.log && mv tmp.log "build-output/failed-job-$id.log"
+          done
+          echo "commit: $GITHUB_SHA" >> build-output/status.txt
+          ls -la build-output
+
+      - name: Commit build output
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A build-output
+          git commit -m "Build output for ${GITHUB_SHA::7} [skip ci]" || echo "nothing new"
+          git push || (git pull --rebase && git push)
