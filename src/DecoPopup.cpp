@@ -152,7 +152,8 @@ bool DecoPopup::init(EditorUI* editor) {
 // ---------------------------------------------------------------- helpers
 
 int DecoPopup::readCount() {
-    auto const& text = m_countInput ? m_countInput->getString() : std::string();
+    // getString() is gd::string on Android, std::string elsewhere: convert explicitly
+    std::string text = m_countInput ? std::string(m_countInput->getString()) : std::string();
     long v = std::strtol(text.c_str(), nullptr, 10);
     int maxCount = static_cast<int>(std::clamp<int64_t>(Mod::get()->getSettingValue<int64_t>("max-count"), 1, 100000));
     if (v <= 0) v = static_cast<long>(std::max<int64_t>(1, Mod::get()->getSettingValue<int64_t>("default-count")));
@@ -187,7 +188,7 @@ void DecoPopup::updateAreaLabel() {
 }
 
 void DecoPopup::saveInputs() {
-    if (m_descInput) Mod::get()->setSavedValue<std::string>("last-description", m_descInput->getString());
+    if (m_descInput) Mod::get()->setSavedValue<std::string>("last-description", std::string(m_descInput->getString()));
     Mod::get()->setSavedValue<int64_t>("last-count", readCount());
 }
 
@@ -224,7 +225,7 @@ void DecoPopup::onInfo(CCObject*) {
         notes = m_lastNotes;
         title = "Last generation";
     } else {
-        notes = aplus::interpretDescription(m_descInput->getString()).notes;
+        notes = aplus::interpretDescription(std::string(m_descInput->getString())).notes;
         title = "AI plan preview";
     }
     std::string text;
@@ -242,7 +243,7 @@ void DecoPopup::onUndoLast(CCObject*) {
 void DecoPopup::onGenerate(CCObject*) {
     if (m_busy) return;
     saveInputs();
-    std::string desc = m_descInput->getString();
+    std::string desc = std::string(m_descInput->getString());
     auto basePlan = aplus::interpretDescription(desc);
 
     bool useClaude = m_claudeToggle && m_claudeToggle->isToggled();

@@ -5,3 +5,5 @@ build-*/
 .vscode/
 .idea/
 tests/test_core
+!build-output/
+!build-output/*.geode

@@ -25,10 +25,6 @@ jobs:
         - name: macOS
           os: macos-latest
 
-        - name: iOS
-          os: macos-latest
-          target: iOS
-
         - name: Android32
           os: ubuntu-latest
           target: Android32
@@ -94,7 +90,7 @@ jobs:
           find out -name '*.geode' -exec cp {} build-output/ \; 2>/dev/null || true
           gh api "repos/$REPO/actions/runs/$RUN/jobs" --jq '.jobs[] | "\(.name): \(.conclusion // .status)"' > build-output/status.txt || true
           for id in $(gh api "repos/$REPO/actions/runs/$RUN/jobs" --jq '.jobs[] | select(.conclusion=="failure") | .id'); do
-            gh api "repos/$REPO/actions/jobs/$id/logs" > "build-output/failed-job-$id.log" 2>&1 || true
+            gh run view --repo "$REPO" --job "$id" --log > "build-output/failed-job-$id.log" 2>&1 || true
             tail -c 1500000 "build-output/failed-job-$id.log" > tmp.log && mv tmp.log "build-output/failed-job-$id.log"
           done
           echo "commit: $GITHUB_SHA" >> build-output/status.txt
@@ -104,6 +100,6 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A build-output
+          git add -f -A build-output
           git commit -m "Build output for ${GITHUB_SHA::7} [skip ci]" || echo "nothing new"
           git push || (git pull --rebase && git push)
